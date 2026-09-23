@@ -18,6 +18,6 @@ public final class PageRequests {
     }
 
     public static Pageable newestFirst(int page, int size) {
-        return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by("id")));
+        return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
     }
 }
