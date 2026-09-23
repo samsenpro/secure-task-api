@@ -12,7 +12,7 @@
 
     <groupId>com.example</groupId>
     <artifactId>secure-task-api</artifactId>
-    <version>0.1.0</version>
+    <version>1.0.0</version>
     <name>secure-task-api</name>
     <description>REST API segura para gestión de usuarios y tareas con Spring Boot, Spring Security y JWT</description>
 

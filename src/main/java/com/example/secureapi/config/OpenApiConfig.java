@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @OpenAPIDefinition(
         info = @Info(
                 title = "Secure Task API",
-                version = "0.1",
+                version = "1.0",
                 description = "API REST para gestión de usuarios y tareas con autenticación JWT y autorización por roles.",
                 license = @License(name = "MIT", url = "https://opensource.org/licenses/MIT")
         ),
