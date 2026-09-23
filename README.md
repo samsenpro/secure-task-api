@@ -27,6 +27,7 @@ API REST para gestionar usuarios y tareas, construida con **Java 21** y **Spring
 - [Tests](#tests)
 - [Decisiones de seguridad](#decisiones-de-seguridad)
 - [Mejoras futuras](#mejoras-futuras)
+- [Autor](#autor)
 - [Licencia](#licencia)
 
 ---
@@ -526,6 +527,11 @@ Docker debe estar en ejecución: los tests de integración levantan un PostgreSQ
 - Spring Boot Actuator con health checks y métricas (Prometheus/Grafana).
 - Pipeline de CI (GitHub Actions) con tests, análisis estático y escaneo de dependencias.
 - Claves asimétricas (RS256) para que otros servicios puedan validar tokens sin conocer el secreto.
+
+## Autor
+
+- **LinkedIn:** [samuel-martinez-beleno](https://www.linkedin.com/in/samuel-martinez-beleno/)
+- **GitHub:** [samsenpro](https://github.com/samsenpro)
 
 ## Licencia
 
