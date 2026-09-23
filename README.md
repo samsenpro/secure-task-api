@@ -2,6 +2,7 @@
 
 API REST para gestionar usuarios y tareas, construida con **Java 21** y **Spring Boot 3**. El proyecto se centra en las buenas prácticas de backend: autenticación **JWT** stateless, autorización por **roles** y por **propietario del recurso**, persistencia con **PostgreSQL** y **Flyway**, validación, manejo de errores consistente, tests con **Testcontainers** y despliegue con **Docker**.
 
+![Version](https://img.shields.io/badge/version-1.0-blue)
 ![Java](https://img.shields.io/badge/Java-21-orange)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-brightgreen)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
@@ -17,6 +18,7 @@ API REST para gestionar usuarios y tareas, construida con **Java 21** y **Spring
 - [Requisitos](#requisitos)
 - [Configuración](#configuración)
 - [Ejecución](#ejecución)
+- [Probar la API con Swagger UI](#probar-la-api-con-swagger-ui)
 - [Autenticación JWT](#autenticación-jwt)
 - [Roles y autorización](#roles-y-autorización)
 - [Endpoints](#endpoints)
@@ -178,6 +180,85 @@ Compose levanta PostgreSQL con healthcheck, espera a que esté disponible y desp
    $env:DB_USERNAME="secure_task_api"; $env:DB_PASSWORD="change-me"; $env:JWT_SECRET="<secreto de 32+ bytes>"
    .\mvnw.cmd spring-boot:run
    ```
+
+## Probar la API con Swagger UI
+
+El proyecto incluye una interfaz **Swagger UI** para probar todos los endpoints desde el navegador, sin Postman ni curl. Swagger no está publicado en internet: lo sirve **tu propia instancia** de la API. Quien clone el repositorio y la arranque (con Docker o en local) lo tendrá en su máquina.
+
+### 1. Arrancar la aplicación con un administrador
+
+```bash
+git clone https://github.com/samsenpro/secure-task-api.git
+cd secure-task-api
+cp .env.example .env
+```
+
+Edita `.env` y define, como mínimo, `DB_PASSWORD`, `JWT_SECRET`, `ADMIN_EMAIL` y `ADMIN_PASSWORD`. La contraseña del administrador debe cumplir la política de contraseñas; si no la cumple, el administrador no se crea y se registra un aviso en el log. Ejemplo:
+
+```dotenv
+DB_PASSWORD=una-clave-local
+JWT_SECRET=pega-aqui-el-resultado-de-openssl-rand-base64-48
+ADMIN_EMAIL=admin@demo.local
+ADMIN_PASSWORD=AdminDemo123
+```
+
+```bash
+docker compose up --build
+```
+
+Cuando en el log aparezca `Started SecureTaskApiApplication`, abre **http://localhost:8080/swagger-ui.html**.
+
+### 2. Crear un usuario e iniciar sesión
+
+1. Despliega **Authentication → `POST /api/v1/auth/register`**, pulsa **Try it out** y después **Execute**. El cuerpo de ejemplo ya viene relleno (`user@example.com` / `Password123!`). Respuesta esperada: **201 Created**.
+2. Despliega **`POST /api/v1/auth/login`**, pulsa **Try it out** y **Execute** con las mismas credenciales. Respuesta esperada: **200 OK** con un `accessToken`.
+3. Copia el valor de `accessToken`, sin las comillas.
+
+### 3. Autorizar Swagger con el token
+
+1. Pulsa el botón **Authorize** 🔓 de la parte superior.
+2. Pega el token en el campo **Value**. No hace falta escribir `Bearer`: Swagger lo añade automáticamente.
+3. Pulsa **Authorize** y después **Close**. Desde ese momento, todas las peticiones incluyen `Authorization: Bearer <token>`.
+
+### 4. Probar las tareas
+
+| Paso | Endpoint | Qué enviar | Resultado esperado |
+|---|---|---|---|
+| Crear | `POST /api/v1/tasks` | `{"title": "Mi tarea", "priority": "HIGH"}` | `201` con la tarea en estado `PENDING` |
+| Listar | `GET /api/v1/tasks` | `page=0`, `size=20` | `200` con la lista paginada de **tus** tareas |
+| Ver | `GET /api/v1/tasks/{id}` | el `id` devuelto al crear | `200` |
+| Editar | `PUT /api/v1/tasks/{id}` | `{"title": "Editada", "status": "COMPLETED", "priority": "LOW"}` | `200` con los cambios |
+| Borrar | `DELETE /api/v1/tasks/{id}` | el `id` | `204 No Content` |
+
+### 5. Comprobar la seguridad
+
+| Prueba | Cómo hacerla | Resultado esperado |
+|---|---|---|
+| Sin token | Pulsa **Authorize → Logout** y llama a `GET /api/v1/tasks` | `401 Unauthorized` |
+| Rol insuficiente | Autorizado como `USER`, llama a `GET /api/v1/admin/users` | `403 Forbidden` |
+| Tarea ajena | Registra un segundo usuario, autorízate con su token y pide `GET /api/v1/tasks/{id}` de una tarea del primero | `404 Not Found` |
+| Datos inválidos | `POST /api/v1/auth/register` con `{"name": "", "email": "x", "password": "weak"}` | `400` con los errores por campo |
+| Email duplicado | Vuelve a registrar `user@example.com` | `409 Conflict` |
+
+### 6. Probar como administrador
+
+1. Pulsa **Authorize → Logout**.
+2. Haz login con `ADMIN_EMAIL` / `ADMIN_PASSWORD` y autoriza Swagger con el nuevo token.
+3. Prueba los endpoints de **Admin - Users** y **Admin - Tasks**:
+   - `GET /api/v1/admin/users` → lista de todos los usuarios.
+   - `PATCH /api/v1/admin/users/{id}/disable` → bloquea un usuario. Su token deja de funcionar al instante (`401`) y tampoco puede volver a iniciar sesión.
+   - `PATCH /api/v1/admin/users/{id}/enable` → lo desbloquea.
+   - `DELETE /api/v1/admin/users/{id}` → lo elimina junto con sus tareas (`204`).
+   - `GET /api/v1/admin/tasks` → tareas de todos los usuarios.
+
+> El token caduca a los `JWT_EXPIRATION` segundos (1 hora por defecto). Si empiezas a recibir `401`, vuelve a iniciar sesión y autoriza Swagger de nuevo.
+
+### Apagar el entorno
+
+```bash
+docker compose down        # detiene los contenedores y conserva los datos
+docker compose down -v     # detiene los contenedores y borra también la base de datos
+```
 
 ## Autenticación JWT
 
