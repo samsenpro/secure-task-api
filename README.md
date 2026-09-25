@@ -1,3 +1,5 @@
+**🇪🇸 Español** | [🇬🇧 English](README.en.md)
+
 # Secure Task API
 
 API REST para gestionar usuarios y tareas, construida con **Java 21** y **Spring Boot 3**. El proyecto se centra en las buenas prácticas de backend: autenticación **JWT** stateless, autorización por **roles** y por **propietario del recurso**, persistencia con **PostgreSQL** y **Flyway**, validación, manejo de errores consistente, tests con **Testcontainers** y despliegue con **Docker**.
